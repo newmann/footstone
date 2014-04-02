@@ -23,7 +23,11 @@ return array(
 
     /* 调试配置 */
     'SHOW_PAGE_TRACE' => true,
-
+    'TRACE_PAGE_TABS'=>array('base'=>'基本',
+            'file'=>'文件',
+            'think'=>'流程',
+            'error|debug|sql'=>'调试',
+            'user'=>'用户'),
     /* 用户相关设置 */
     'USER_MAX_CACHE'     => 1000, //最大缓存用户数
     'USER_ADMINISTRATOR' => 1, //管理员用户ID

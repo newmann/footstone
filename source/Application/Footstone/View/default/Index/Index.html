@@ -33,46 +33,12 @@
 <link rel="stylesheet" href="__CSS__/style_new.css?{$js_debug}">
 <link rel="stylesheet" href="__CSS__/theme_blue.css?{$js_debug}">
 <link rel="stylesheet" href="__CSS__/hack.css?{$js_debug}">
-// <script>
-// //全局变量
-// var GV = {
-// 	HOST:"{$_SERVER['HTTP_HOST']}",
-//     DIMAUB: "__ROOT__/",
-//     JS_ROOT: "statics/js/",
-//     TOKEN: ""
-// };
-// </script>
-
-<php>function getsubmenu($AllMenu){</php>
-<php>foreach($AllMenu as $menu){ </php>
-					<li>
-						<php>if(empty($menu->items)){</php>
-							<a href="javascript:openapp('{$menu:url}','{$menu:id}','{$menu:name}');">
-								<i class="fa fa-{$menu:icon|default='desktop'}"></i>
-								<span class="menu-text">{$menu:name}</span>
-							</a>
-						<php>}else{</php>
-							<a href="#" class="dropdown-toggle">
-								<i class="fa fa-{$menu:icon|default='desktop'}"></i>
-								<span class="menu-text">{$menu:name}</span>
-								<b class="arrow fa fa-angle-down"></b>
-							</a>
-							<ul  class="submenu">
-									<php>getsubmenu((array)$menu->items)</php>
-							</ul>	
-						<php>}</php>
-						
-					</li>
-					
-				<php>}</php>
-<php>}</php>
-
 
 <if condition="APP_DEBUG">
-	<style>
-	#think_page_trace_open{left: 0 !important;
-	right: initial !important;}			
-	</style>
+<style>
+#think_page_trace_open{left: 0 !important;
+right: initial !important;}			
+</style>
 </if>
 
 </head>
@@ -150,7 +116,7 @@
 			</div>
 			<div id="nav_wraper">
 			<ul class="nav nav-list">
-				{:getsubmenu($submenus)}
+				{$AllMenu}
 			</ul>
 			</div>
 			

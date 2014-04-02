@@ -10,7 +10,7 @@ namespace Footstone\Controller;
 use Think\Controller;
 use Admin\Model\AuthRuleModel;
 use Admin\Model\AuthGroupModel;
-use Admin\Model\MenuModel;
+
 /**
  * Footstone公共Action
  * @author Newmannhu <Newmannhu@qq.com>
@@ -25,7 +25,7 @@ class FootstoneController extends Controller {
         define('UID',is_login());
         if( !UID ){// 还没登录 跳转到登录页面
             // $this->redirect('Public/login');
-            $this->error('还没有登陆系统！',U('Public/login'),30);
+            $this->error('还没有登陆系统！');
         }
         /* 读取数据库中的配置 */
         $config =   S('DB_CONFIG_DATA');
@@ -40,27 +40,60 @@ class FootstoneController extends Controller {
         if(!IS_ROOT && C('ADMIN_ALLOW_IP')){
             // 检查IP地址访问
             if(!in_array(get_client_ip(),explode(',',C('ADMIN_ALLOW_IP')))){
-                $this->error('403:禁止访问',U('Public/login'),30);
+                $this->error('403:禁止访问');
             }
         }
         // 检测访问权限
-        $access =   $this->accessControl();
-        if ( $access === false ) {
-            $this->error('403:禁止访问',U('Public/login'),30);
-        }elseif( $access === null ){
-            $dynamic        =   $this->checkDynamic();//检测分类栏目有关的各项动态权限
-            if( $dynamic === null ){
-                //检测非动态权限
-                $rule  = strtolower(MODULE_NAME.'/'.CONTROLLER_NAME.'/'.ACTION_NAME);
-                if ( !$this->checkRule($rule,array('in','1,2')) ){
-                    $this->error('未授权访问!');
-                }
-            }elseif( $dynamic === false ){
-                $this->error('未授权访问!');
-            }
-        }
-        $this->assign('AllMenu', $this->AllMenu());
+        // $access =   $this->accessControl();
+        // if ( $access === false ) {
+        //     $this->error('403:禁止访问');
+        // }elseif( $access === null ){
+        //     $dynamic        =   $this->checkDynamic();//检测分类栏目有关的各项动态权限
+        //     if( $dynamic === null ){
+        //         //检测非动态权限
+        //         $rule  = strtolower(MODULE_NAME.'/'.CONTROLLER_NAME.'/'.ACTION_NAME);
+        //         if ( !$this->checkRule($rule,array('in','1,2')) ){
+        //             $this->error('未授权访问!');
+        //         }
+        //     }elseif( $dynamic === false ){
+        //         $this->error('未授权访问!');
+        //     }
+        // }
+        $menuArray = D('Menu')->AllMenu();
+
+        $this->assign('AllMenu', $this->MenuItemstr($menuArray));
     }
+
+    public function MenuItemStr($menuArray){
+        $strMenu='';
+        foreach ($menuArray as $key => $menu) {
+            $strMenu .= "<li>";
+            if(is_null($menu['items'])){
+                $strMenu .= "<a href=\"javascript:openapp('" . $menu['url'] ."','" .$menu['id'] 
+                    . "','" . $menu['title'] ."');\"> "
+                    ."<i class=\"fa fa-desktop\"></i>"
+                    ."<span class=\"menu-text\">" . $menu['title'] . "</span>"
+                    ."</a>";
+            } else{
+                $strMenu .="<a href=\"#\" class=\"dropdown-toggle\">" 
+                    ."<i class=\"fa fa-desktop\"></i>" 
+                    ."<span class=\"menu-text\"> " . $menu['title'] ."</span>"
+                    ."<b class=\"arrow fa fa-angle-down\"></b> "
+                    ."</a> "
+                    ."<ul  class=\"submenu\">";
+                $strMenu .= "<ul  class=\"submenu\">" ;   
+                $result = $this->MenuItemstr($menu['items']);
+                $strMenu .= $result;
+                $strMenu .= "</ul> ";
+            }
+            $strMenu .= "</li>";
+        }
+
+        trace($strMenu,'菜单数组','user');
+        return $strMenu;
+
+    }
+
 
     /**
      * 权限检测
@@ -234,144 +267,6 @@ class FootstoneController extends Controller {
         }
     }
 
-    /**
-     * 获取控制器菜单数组,二级菜单元素位于一级菜单的'_child'元素中
-     * @author 朱亚杰  <xcoolcc@gmail.com>
-     */
-    final public function getMenus($controller=CONTROLLER_NAME){
-        // $menus  =   session('ADMIN_MENU_LIST'.$controller);
-        if(empty($menus)){
-            // 获取主菜单
-            $where['pid']   =   0;
-            $where['hide']  =   0;
-            if(!C('DEVELOP_MODE')){ // 是否开发者模式
-                $where['is_dev']    =   0;
-            }
-            $menus['main']  =   M('Admin/Menu')->where($where)->order('sort asc')->select();
-
-            $menus['child'] = array(); //设置子节点
-
-            //高亮主菜单
-            $current = M('Admin/Menu')->where("url like '%{$controller}/".ACTION_NAME."%'")->field('id')->find();
-            if($current){
-                $nav = D('Admin/Menu')->getPath($current['id']);
-                $nav_first_title = $nav[0]['title'];
-
-                foreach ($menus['main'] as $key => $item) {
-                    if (!is_array($item) || empty($item['title']) || empty($item['url']) ) {
-                        $this->error('控制器基类$menus属性元素配置有误');
-                    }
-                    if( stripos($item['url'],MODULE_NAME)!==0 ){
-                        $item['url'] = MODULE_NAME.'/'.$item['url'];
-                    }
-                    // 判断主菜单权限
-                    if ( !IS_ROOT && !$this->checkRule($item['url'],AuthRuleModel::RULE_MAIN,null) ) {
-                        unset($menus['main'][$key]);
-                        continue;//继续循环
-                    }
-
-                    // 获取当前主菜单的子菜单项
-                    if($item['title'] == $nav_first_title){
-                        $menus['main'][$key]['class']='current';
-                        //生成child树
-                        $groups = M('Admin/Menu')->where("pid = {$item['id']}")->distinct(true)->field("`group`")->select();
-                        if($groups){
-                            $groups = array_column($groups, 'group');
-                        }else{
-                            $groups =   array();
-                        }
-
-                        //获取二级分类的合法url
-                        $where          =   array();
-                        $where['pid']   =   $item['id'];
-                        $where['hide']  =   0;
-                        if(!C('DEVELOP_MODE')){ // 是否开发者模式
-                            $where['is_dev']    =   0;
-                        }
-                        $second_urls = M('Admin/Menu')->where($where)->getField('id,url');
-
-                        if(!IS_ROOT){
-                            // 检测菜单权限
-                            $to_check_urls = array();
-                            foreach ($second_urls as $key=>$to_check_url) {
-                                if( stripos($to_check_url,MODULE_NAME)!==0 ){
-                                    $rule = MODULE_NAME.'/'.$to_check_url;
-                                }else{
-                                    $rule = $to_check_url;
-                                }
-                                if($this->checkRule($rule, AuthRuleModel::RULE_URL,null))
-                                    $to_check_urls[] = $to_check_url;
-                            }
-                        }
-                        // 按照分组生成子菜单树
-                        foreach ($groups as $g) {
-                            $map = array('group'=>$g);
-                            if(isset($to_check_urls)){
-                                if(empty($to_check_urls)){
-                                    // 没有任何权限
-                                    continue;
-                                }else{
-                                    $map['url'] = array('in', $to_check_urls);
-                                }
-                            }
-                            $map['pid'] =   $item['id'];
-                            $map['hide']    =   0;
-                            if(!C('DEVELOP_MODE')){ // 是否开发者模式
-                                $map['is_dev']  =   0;
-                            }
-                            $menuList = M('Admin/Menu')->where($map)->field('id,pid,title,url,tip')->order('sort asc')->select();
-                            $menus['child'][$g] = list_to_tree($menuList, 'id', 'pid', 'operater', $item['id']);
-                        }
-                        if($menus['child'] === array()){
-                            //$this->error('主菜单下缺少子菜单，请去系统=》后台菜单管理里添加');
-                        }
-                    }
-                }
-            }
-            // session('ADMIN_MENU_LIST'.$controller,$menus);
-        }
-        return $menus;
-    }
-
-    /**
-     * 返回后台节点数据
-     * @param boolean $tree    是否返回多维数组结构(生成菜单时用到),为false返回一维数组(生成权限节点时用到)
-     * @retrun array
-     *
-     * 注意,返回的主菜单节点数组中有'controller'元素,以供区分子节点和主节点
-     *
-     * @author 朱亚杰 <xcoolcc@gmail.com>
-     */
-    final protected function returnNodes($tree = true){
-        static $tree_nodes = array();
-        if ( $tree && !empty($tree_nodes[(int)$tree]) ) {
-            return $tree_nodes[$tree];
-        }
-        if((int)$tree){
-            $list = M('Admin/Menu')->field('id,pid,title,url,tip,hide')->order('sort asc')->select();
-            foreach ($list as $key => $value) {
-                if( stripos($value['url'],MODULE_NAME)!==0 ){
-                    $list[$key]['url'] = MODULE_NAME.'/'.$value['url'];
-                }
-            }
-            $nodes = list_to_tree($list,$pk='id',$pid='pid',$child='operator',$root=0);
-            foreach ($nodes as $key => $value) {
-                if(!empty($value['operator'])){
-                    $nodes[$key]['child'] = $value['operator'];
-                    unset($nodes[$key]['operator']);
-                }
-            }
-        }else{
-            $nodes = M('Admin/Menu')->field('title,url,tip,pid')->order('sort asc')->select();
-            foreach ($nodes as $key => $value) {
-                if( stripos($value['url'],MODULE_NAME)!==0 ){
-                    $nodes[$key]['url'] = MODULE_NAME.'/'.$value['url'];
-                }
-            }
-        }
-        $tree_nodes[(int)$tree]   = $nodes;
-        return $nodes;
-    }
 
 
     /**

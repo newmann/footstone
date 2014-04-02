@@ -6,10 +6,12 @@
 // +----------------------------------------------------------------------
 // | Author: Newmannhu <Newmannhu@qq.com> <http://>
 // +----------------------------------------------------------------------
-/* * 
- * 菜单
- */
 
+namespace Footstone\Model;
+use Think\Model;
+/* * 
+ * 菜单管理模型
+ */
 class MenuModel extends Model {
 
     //自动验证
@@ -17,7 +19,6 @@ class MenuModel extends Model {
         array('url','require','url必须填写'), //默认情况下用正则进行验证
     );
 
-    );
     //自动完成
     protected $_auto = array(
             //array(填充字段,填充内容,填充条件,附加规则)
@@ -40,49 +41,82 @@ class MenuModel extends Model {
         return $array;
     }
 
+    /** 菜单数组定义
+     array(
+                "id" => "",
+                "title" => "changyong",
+                "pid" => "常用",
+                "sort" => "",
+                "url" => "",
+                "tip" => "",
+                "group" => "",
+                "itmes" => $items(子菜单)
+        );
+        整个菜单树是由数组嵌套而成，一级菜单+二级菜单+3级菜单
+        菜单已经按sort方式排好序；
+    */
+
+
+    /**
+     * 按父ID查找下级子菜单
+     * @param integer $parentid   父菜单ID  
+     * @param integer $with_self  是否包括他自己
+     * 按数组方式返回；
+     */
+    public function NextLevelMenu($parentid, $with_self = false) {
+        //父节点ID
+        $parentid = (int) $parentid;
+        $result = $this->where(array('pid' => $parentid, 'hide' => 0))->order(array("sort" => "ASC"))->select();
+        
+        if ($with_self) {
+            $result2[0] = $this->where(array('id' => $parentid))->find();
+            $result = array_merge($result2, $result);
+        }
+
+        return $result;
+    }
+
+    /**
+     * 按父ID查找所有的子菜单项
+     * @param integer $parentid   父菜单ID  
+     * 按数组方式返回；
+     */
+    public function SubMenu($parentid){
+        $result = $this->NextLevelMenu($parentid);
+        // if (count($result)<>0) {
+        //     foreach ($result as $key => $value) {
+        //         $value['items'] = $this->SubMenu($value['id']);
+        //     }
+        // }
+        return $result;
+    }
+
     /**
      * 获取一级菜单 头部菜单导航
      * 
      */
     public function MainMenu() {
-        $array = $this->admin_menu(0, 1);
+        $array = $this->NextLevelMenu(0, 0);
         return $array;
     }
-
     /**
-     * 菜单树状结构集合
+     * 获取整个菜单树
+     *
      */
-    public function menu_json() {
-       // $Panel = M("AdminPanel")->where(array("userid" => AppframeAction::$Cache['uid']))->select();
-        $items['0changyong'] = array(
-            "id" => "",
-            "name" => "常用菜单",
-            "parent" => "changyong",
-            "url" => U("Menu/public_changyong"),
-        );
-        /* foreach ($Panel as $r) {
-            $items[$r['menuid'] . '0changyong'] = array(
-                "icon" => "",
-                "id" => $r['menuid'] . '0changyong',
-                "name" => $r['name'],
-                "parent" => "changyong",
-                "url" => $r['url'],
-            );
-        } */
-        $changyong = array(
-            "changyong" => array(
-                "icon" => "",
-                "id" => "changyong",
-                "name" => "常用",
-                "parent" => "",
-                "url" => "",
-                "items" => $items
-            )
-        );
-        $data = $this->get_tree(0);
-        //return array_merge($changyong, $data);
-        return $data;
+    public function AllMenu() {
+        $result = $this->SubMenu(0);
+        return $result;
+        //父节点ID
+        // $parentid = (int) $parentid;
+        // $result = $this->where(array('pid' => $parentid, 'hide' => 0))->order(array("sort" => "ASC"))->select();
+        // if ($with_self) {
+        //     $result2[] = $this->where(array('id' => $parentid))->find();
+        //     $result = array_merge($result2, $result);
+        // }
+        // return $array;
     }
+
+
 
     //取得树形结构的菜单
     public function get_tree($myid, $parent = "", $Level = 1) {
@@ -153,16 +187,7 @@ class MenuModel extends Model {
         $this->_before_write($data);
     }
     
-    public function menu($parentid, $with_self = false){
-    	//父节点ID
-    	$parentid = (int) $parentid;
-    	$result = $this->where(array('parentid' => $parentid))->select();
-    	if ($with_self) {
-    		$result2[] = $this->where(array('id' => $parentid))->find();
-    		$result = array_merge($result2, $result);
-    	}
-    	return $result;
-    }
+
 
 }
 
