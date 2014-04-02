@@ -8,13 +8,14 @@
 // +----------------------------------------------------------------------
 
 namespace Footstone\Controller;
+use Think\Controller;
 use User\Api\UserApi;
 
 /**
  * 后台首页控制器
  * @author 麦当苗儿 <zuojiazi@vip.qq.com>
  */
-class PublicController extends \Think\Controller {
+class PublicController extends Controller {
 
     /**
      * 后台用户登录

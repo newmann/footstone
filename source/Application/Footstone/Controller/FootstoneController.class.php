@@ -25,7 +25,7 @@ class FootstoneController extends Controller {
         define('UID',is_login());
         if( !UID ){// 还没登录 跳转到登录页面
             // $this->redirect('Public/login');
-            $this->error('还没有登陆系统！');
+            $this->error('还没有登陆系统！',U('Public/login'),30);
         }
         /* 读取数据库中的配置 */
         $config =   S('DB_CONFIG_DATA');
@@ -40,13 +40,13 @@ class FootstoneController extends Controller {
         if(!IS_ROOT && C('ADMIN_ALLOW_IP')){
             // 检查IP地址访问
             if(!in_array(get_client_ip(),explode(',',C('ADMIN_ALLOW_IP')))){
-                $this->error('403:禁止访问');
+                $this->error('403:禁止访问',U('Public/login'),30);
             }
         }
         // 检测访问权限
         $access =   $this->accessControl();
         if ( $access === false ) {
-            $this->error('403:禁止访问');
+            $this->error('403:禁止访问',U('Public/login'),30);
         }elseif( $access === null ){
             $dynamic        =   $this->checkDynamic();//检测分类栏目有关的各项动态权限
             if( $dynamic === null ){
@@ -59,7 +59,7 @@ class FootstoneController extends Controller {
                 $this->error('未授权访问!');
             }
         }
-        $this->assign('__MENU__', $this->getMenus());
+        $this->assign('AllMenu', $this->AllMenu());
     }
 
     /**
