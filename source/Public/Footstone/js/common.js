@@ -1,238 +1,342 @@
 //dom加载完成后执行的js
-;$(function(){
 
-	//全选的实现
-	$(".check-all").click(function(){
-		$(".ids").prop("checked", this.checked);
-	});
-	$(".ids").click(function(){
-		var option = $(".ids");
-		option.each(function(i){
-			if(!this.checked){
-				$(".check-all").prop("checked", false);
-				return false;
-			}else{
-				$(".check-all").prop("checked", true);
-			}
-		});
-	});
+;(function () {
+    //全局ajax处理
+    $.ajaxSetup({
+        complete: function (jqXHR) {
+            //登录失效处理
+            if (jqXHR.responseText.state === 'logout') {
+                location.href = GV.URL.LOGIN;
+            }
+        },
+        data: {
+            __hash__: GV.TOKEN
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            //请求失败处理
+            alert(errorThrown ? errorThrown : '操作失败');
+        }
+    });
 
-    //ajax get请求
-    $('.ajax-get').click(function(){
-        var target;
-        var that = this;
-        if ( $(this).hasClass('confirm') ) {
-            if(!confirm('确认要执行该操作吗?')){
+    if ($.browser.msie) {
+        //ie 都不缓存
+        $.ajaxSetup({
+            cache: false
+        });
+    }
+
+    //不支持placeholder浏览器下对placeholder进行处理
+    if (document.createElement('input').placeholder !== '') {
+        $('[placeholder]').focus(function () {
+            var input = $(this);
+            if (input.val() == input.attr('placeholder')) {
+                input.val('');
+                input.removeClass('placeholder');
+            }
+        }).blur(function () {
+            var input = $(this);
+            if (input.val() == '' || input.val() == input.attr('placeholder')) {
+                input.addClass('placeholder');
+                input.val(input.attr('placeholder'));
+            }
+        }).blur().parents('form').submit(function () {
+            $(this).find('[placeholder]').each(function () {
+                var input = $(this);
+                if (input.val() == input.attr('placeholder')) {
+                    input.val('');
+                }
+            });
+        });
+    }
+
+
+
+    //iframe页面f5刷新
+    $(document).on('keydown', function (event) {
+        var e = window.event || event;
+        if (e.keyCode == 116) {
+            e.keyCode = 0;
+
+            var $doc = $(parent.window.document),
+                id = $doc.find('#B_history .current').attr('data-id'),
+                iframe = $doc.find('#iframe_' + id);
+            try{
+                if (iframe[0].contentWindow) {
+                    //common.js
+                    reloadPage(iframe[0].contentWindow);
+                }
+            }catch(err){}
+            //!ie
+            return false;
+        }
+
+    });
+
+    //所有的ajax form提交,由于大多业务逻辑都是一样的，故统一处理
+    var ajaxForm_list = $('form.J_ajaxForm');
+    if (ajaxForm_list.length) {
+        Wind.use('ajaxForm', 'artDialog', function () {
+            if ($.browser.msie) {
+                //ie8及以下，表单中只有一个可见的input:text时，会整个页面会跳转提交
+                ajaxForm_list.on('submit', function (e) {
+                    //表单中只有一个可见的input:text时，enter提交无效
+                    e.preventDefault();
+                });
+            }
+
+            $('button.J_ajax_submit_btn').on('click', function (e) {
+                e.preventDefault();
+                /*var btn = $(this).find('button.J_ajax_submit_btn'),
+                    form = $(this);*/
+                var btn = $(this),
+                    form = btn.parents('form.J_ajaxForm');
+
+                //批量操作 判断选项
+                if (btn.data('subcheck')) {
+                    btn.parent().find('span').remove();
+                    if (form.find('input.J_check:checked').length) {
+                        var msg = btn.data('msg');
+                        if (msg) {
+                            art.dialog({
+                                id: 'warning',
+                                icon: 'warning',
+                                content: btn.data('msg'),
+                                cancelVal: '关闭',
+                                cancel: function () {
+                                    //btn.data('subcheck', false);
+                                    //btn.click();
+                                },
+                                ok: function () {
+                                     btn.data('subcheck', false);
+                                     btn.click();
+                                }
+                            });
+                        } else {
+                            btn.data('subcheck', false);
+                            btn.click();
+                        }
+
+                    } else {
+                        $('<span class="tips_error">请至少选择一项</span>').appendTo(btn.parent()).fadeIn('fast');
+                    }
+                    return false;
+                }
+
+                //ie处理placeholder提交问题
+                if ($.browser.msie) {
+                    form.find('[placeholder]').each(function () {
+                        var input = $(this);
+                        if (input.val() == input.attr('placeholder')) {
+                            input.val('');
+                        }
+                    });
+                }
+
+                form.ajaxSubmit({
+                    url: btn.data('action') ? btn.data('action') : form.attr('action'), //按钮上是否自定义提交地址(多按钮情况)
+                    dataType: 'json',
+                    beforeSubmit: function (arr, $form, options) {
+                        var text = btn.text();
+
+                        //按钮文案、状态修改
+                        btn.text(text + '中...').prop('disabled', true).addClass('disabled');
+                    },
+                    success: function (data, statusText, xhr, $form) {
+                        var text = btn.text();
+
+                        //按钮文案、状态修改
+                        btn.removeClass('disabled').text(text.replace('中...', '')).parent().find('span').remove();
+                        if (data.state === 'success') {
+                            $('<span class="tips_success">' + data.info + '</span>').appendTo(btn.parent()).fadeIn('slow').delay(1000).fadeOut(function () {
+                                if (data.referer) {
+                                    //返回带跳转地址
+                                    if(window.parent.art){
+                                        //iframe弹出页
+                                        window.parent.location.href = data.referer;
+                                    }else{
+                                        window.location.href = data.referer;
+                                    }
+                                } else {
+                                    if(window.parent.art){
+                                        reloadPage(window.parent);
+                                    }else{
+                                        //刷新当前页
+                                        reloadPage(window);
+                                    }
+                                }
+                            });
+                        } else if (data.state === 'fail') {
+                            $('<span class="tips_error">' + data.info + '</span>').appendTo(btn.parent()).fadeIn('fast');
+                            btn.removeProp('disabled').removeClass('disabled');
+                        }
+                    }
+                });
+            });
+
+        });
+    }
+
+    //所有的请求刷新操作
+    var ajax_refresh = $('a.J_ajax_refresh'),
+        refresh_lock = false;
+    if (ajax_refresh.length) {
+        ajax_refresh.on('click', function (e) {
+            e.preventDefault();
+            if (refresh_lock) {
                 return false;
             }
-        }
-        if ( (target = $(this).attr('href')) || (target = $(this).attr('url')) ) {
-            $.get(target).success(function(data){
-                if (data.status==1) {
-                    if (data.url) {
-                        updateAlert(data.info + ' 页面即将自动跳转~','alert-success');
-                    }else{
-                        updateAlert(data.info,'alert-success');
-                    }
-                    setTimeout(function(){
-                        if (data.url) {
-                            location.href=data.url;
-                        }else if( $(that).hasClass('no-refresh')){
-                            $('#top-alert').find('button').click();
-                        }else{
-                            location.reload();
-                        }
-                    },1500);
-                }else{
-                    updateAlert(data.info);
-                    setTimeout(function(){
-                        if (data.url) {
-                            location.href=data.url;
-                        }else{
-                            $('#top-alert').find('button').click();
-                        }
-                    },1500);
-                }
-            });
+            refresh_lock = true;
 
-        }
-        return false;
-    });
+            $.post(this.href, function (data) {
+                refresh_lock = false;
 
-    //ajax post submit请求
-    $('.ajax-post').click(function(){
-        var target,query,form;
-        var target_form = $(this).attr('target-form');
-        var that = this;
-        var nead_confirm=false;
-        if( ($(this).attr('type')=='submit') || (target = $(this).attr('href')) || (target = $(this).attr('url')) ){
-            form = $('.'+target_form);
-
-            if ($(this).attr('hide-data') === 'true'){//无数据时也可以使用的功能
-            	form = $('.hide-data');
-            	query = form.serialize();
-            }else if (form.get(0)==undefined){
-            	return false;
-            }else if ( form.get(0).nodeName=='FORM' ){
-                if ( $(this).hasClass('confirm') ) {
-                    if(!confirm('确认要执行该操作吗?')){
-                        return false;
+                if (data.state === 'success') {
+                    if (data.referer) {
+                        location.href = data.referer;
+                    } else {
+                        reloadPage(window);
                     }
+                } else if (data.state === 'fail') {
+                    Wind.art.dialog.alert(data.info);
                 }
-                if($(this).attr('url') !== undefined){
-                	target = $(this).attr('url');
-                }else{
-                	target = form.get(0).action;
-                }
-                query = form.serialize();
-            }else if( form.get(0).nodeName=='INPUT' || form.get(0).nodeName=='SELECT' || form.get(0).nodeName=='TEXTAREA') {
-                form.each(function(k,v){
-                    if(v.type=='checkbox' && v.checked==true){
-                        nead_confirm = true;
-                    }
-                })
-                if ( nead_confirm && $(this).hasClass('confirm') ) {
-                    if(!confirm('确认要执行该操作吗?')){
-                        return false;
-                    }
-                }
-                query = form.serialize();
-            }else{
-                if ( $(this).hasClass('confirm') ) {
-                    if(!confirm('确认要执行该操作吗?')){
-                        return false;
-                    }
-                }
-                query = form.find('input,select,textarea').serialize();
-            }
-            $(that).addClass('disabled').attr('autocomplete','off').prop('disabled',true);
-            $.post(target,query).success(function(data){
-                if (data.status==1) {
-                    if (data.url) {
-                        updateAlert(data.info + ' 页面即将自动跳转~','alert-success');
-                    }else{
-                        updateAlert(data.info ,'alert-success');
-                    }
-                    setTimeout(function(){
-                        if (data.url) {
-                            location.href=data.url;
-                        }else if( $(that).hasClass('no-refresh')){
-                            $('#top-alert').find('button').click();
-                            $(that).removeClass('disabled').prop('disabled',false);
-                        }else{
-                            location.reload();
-                        }
-                    },1500);
-                }else{
-                    updateAlert(data.info);
-                    setTimeout(function(){
-                        if (data.url) {
-                            location.href=data.url;
-                        }else{
-                            $('#top-alert').find('button').click();
-                            $(that).removeClass('disabled').prop('disabled',false);
-                        }
-                    },1500);
-                }
-            });
-        }
-        return false;
-    });
-
-	/**顶部警告栏*/
-	var content = $('#main');
-	var top_alert = $('#top-alert');
-	top_alert.find('.close').on('click', function () {
-		top_alert.removeClass('block').slideUp(200);
-		// content.animate({paddingTop:'-=55'},200);
-	});
-
-    window.updateAlert = function (text,c) {
-		text = text||'default';
-		c = c||false;
-		if ( text!='default' ) {
-            top_alert.find('.alert-content').text(text);
-			if (top_alert.hasClass('block')) {
-			} else {
-				top_alert.addClass('block').slideDown(200);
-				// content.animate({paddingTop:'+=55'},200);
-			}
-		} else {
-			if (top_alert.hasClass('block')) {
-				top_alert.removeClass('block').slideUp(200);
-				// content.animate({paddingTop:'-=55'},200);
-			}
-		}
-		if ( c!=false ) {
-            top_alert.removeClass('alert-error alert-warn alert-info alert-success').addClass(c);
-		}
-	};
-
-    //按钮组
-    (function(){
-        //按钮组(鼠标悬浮显示)
-        $(".btn-group").mouseenter(function(){
-            var userMenu = $(this).children(".dropdown ");
-            var icon = $(this).find(".btn i");
-            icon.addClass("btn-arrowup").removeClass("btn-arrowdown");
-            userMenu.show();
-            clearTimeout(userMenu.data("timeout"));
-        }).mouseleave(function(){
-            var userMenu = $(this).children(".dropdown");
-            var icon = $(this).find(".btn i");
-            icon.removeClass("btn-arrowup").addClass("btn-arrowdown");
-            userMenu.data("timeout") && clearTimeout(userMenu.data("timeout"));
-            userMenu.data("timeout", setTimeout(function(){userMenu.hide()}, 100));
+            }, 'json');
         });
+    }
 
-        //按钮组(鼠标点击显示)
-        // $(".btn-group-click .btn").click(function(){
-        //     var userMenu = $(this).next(".dropdown ");
-        //     var icon = $(this).find("i");
-        //     icon.toggleClass("btn-arrowup");
-        //     userMenu.toggleClass("block");
-        // });
-        $(".btn-group-click .btn").click(function(e){
-            if ($(this).next(".dropdown").is(":hidden")) {
-                $(this).next(".dropdown").show();
-                $(this).find("i").addClass("btn-arrowup");
-                e.stopPropagation();
-            }else{
-                $(this).find("i").removeClass("btn-arrowup");
-            }
-        })
-        $(".dropdown").click(function(e) {
-            e.stopPropagation();
-        });
-        $(document).click(function() {
-            $(".dropdown").hide();
-            $(".btn-group-click .btn").find("i").removeClass("btn-arrowup");
-        });
-    })();
 
-    // 独立域表单获取焦点样式
-    $(".text").focus(function(){
-        $(this).addClass("focus");
-    }).blur(function(){
-        $(this).removeClass('focus');
-    });
-    $("textarea").focus(function(){
-        $(this).closest(".textarea").addClass("focus");
-    }).blur(function(){
-        $(this).closest(".textarea").removeClass("focus");
-    });
 });
 
+//重新刷新页面，使用location.reload()有可能导致重新提交
+function reloadPage(win) {
+    var location = win.location;
+    location.href = location.pathname + location.search;
+}
+
+//页面跳转
+function redirect(url) {
+    location.href = url;
+}
+
+//读取cookie
+function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1, c.length);
+        }
+        if (c.indexOf(nameEQ) == 0) {
+            return c.substring(nameEQ.length, c.length);
+        }
+    };
+
+    return null;
+}
+
+//设置cookie
+function setCookie(name, value, days) {
+    var argc = setCookie.arguments.length;
+    var argv = setCookie.arguments;
+    var secure = (argc > 5) ? argv[5] : false;
+    var expire = new Date();
+    if(days==null || days==0) days=1;
+    expire.setTime(expire.getTime() + 3600000*24*days);
+    document.cookie = name + "=" + escape(value) + ("; path=/") + ((secure == true) ? "; secure" : "") + ";expires="+expire.toGMTString();
+}
+
+//浮出提示_居中
+function resultTip(options) {
+
+    var cls = (options.error ? 'warning' : 'success');
+    var pop = $('<div style="left:50%;top:30%;" class="pop_showmsg_wrap"><span class="pop_showmsg"><span class="' + cls + '">' + options.msg + '</span></span></div>');
+
+    pop.appendTo($('body')).fadeIn(function () {
+        pop.css({
+            marginLeft: -pop.innerWidth() / 2
+        }); //水平居中
+    }).delay(1500).fadeOut(function () {
+        pop.remove();
+
+        //回调
+        if (options.callback) {
+            options.callback();
+        }
+    });
+
+}
+
+//弹窗居中定位 非ie6 fixed定位
+function popPos(wrap) {
+    var ie6 = false,
+        pos = 'fixed',
+        top,
+        win_height = $(window).height(),
+        wrap_height = wrap.outerHeight();
+
+    if ($.browser.msie && $.browser.version < 7) {
+        ie6 = true;
+        pos = 'absolute';
+    }
+
+    if (win_height < wrap_height) {
+        top = 0;
+    } else {
+        top = ($(window).height() - wrap.outerHeight()) / 2;
+    }
+
+    wrap.css({
+        position: pos,
+        top: top + (ie6 ? $(document).scrollTop() : 0),
+        left: ($(window).width() - wrap.innerWidth()) / 2
+    }).show();
+}
+
+
+/*
+ * 头像的错误处理
+ */
+function avatarError(avatars) {
+    avatars.each(function () {
+        this.onerror = function () {
+            this.onerror = null;
+            this.src = GV.URL.IMAGE_RES + '/face/face_' + $(this).data('type') + '.jpg'; //替代头像
+            this.setAttribute('alt', '默认头像');
+
+            //隐藏恢复默认头像
+            $('#J_set_def').hide();
+        }
+        this.src = this.src;
+    });
+}
+
+//新窗口打开
+function openwinx(url,name,w,h) {
+    if(!w) w=screen.width;
+    if(!h) h=screen.height;
+    //window.open(url,name,"top=100,left=400,width=" + w + ",height=" + h + ",toolbar=no,menubar=no,scrollbars=yes,resizable=yes,location=no,status=no");
+    window.open(url,name);
+}
+//询问
+function confirmurl(url, message) {
+    Wind.use("artDialog", "iframeTools", function () {
+        art.dialog.confirm(message, function () {
+            location.href = url;
+        }, function () {
+            art.dialog.tips('你取消了操作');
+        });
+    });
+}
 /* 上传图片预览弹出层 */
 $(function(){
     $(window).resize(function(){
         var winW = $(window).width();
         var winH = $(window).height();
         $(".upload-img-box").click(function(){
-        	//如果没有图片则不显示
-        	if($(this).find('img').attr('src') === undefined){
-        		return false;
-        	}
+            //如果没有图片则不显示
+            if($(this).find('img').attr('src') === undefined){
+                return false;
+            }
             // 创建弹出框以及获取弹出图片
             var imgPopup = "<div id=\"uploadPop\" class=\"upload-img-popup\"></div>"
             var imgItem = $(this).find(".upload-pre-item").html();
