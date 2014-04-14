@@ -1,4 +1,4 @@
-<admintpl file="header"/>
+<include file="Public/header"/>
 </head>
 
 <body>
@@ -7,7 +7,7 @@
   <h2 class="h_a">系统通知</h2>
   <div class="home_info">
     <ul  id="thinkcmf_notices">
-    	<li><img src="__TMPL__res/images/loading.gif"  style="vertical-align: middle;"/><span style="display:inline-block;vertical-align: middle;">加载中...</span></li>
+    	<li><img src="__IMG__/loading.gif"  style="vertical-align: middle;"/><span style="display:inline-block;vertical-align: middle;">加载中...</span></li>
     </ul>
   </div>
   <h2 class="h_a">系统信息</h2>
@@ -27,7 +27,7 @@
     </ul>
   </div>
 </div>
-<script src="__ROOT__/statics/js/common.js{$js_debug}"></script> 
+<script src="__JS__/common.js{$js_debug}"></script> 
 <script>
 //获取官方通知
 $.getJSON("http://www.thinkcmf.com/service/sms_jsonp.php?callback=?",function(data){

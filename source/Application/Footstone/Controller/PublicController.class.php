@@ -36,8 +36,8 @@ class PublicController extends Controller {
                 $Member = D('Admin/Member');
                 if($Member->login($uid)){ //登录用户
                     //TODO:跳转到登录前页面
-                    // $this->success('登录成功！', U('Index/index'));
-                    $this->redirect('Index/index');
+                    $this->success('登录成功！', U('Index/index'));
+                    //$this->redirect('Index/index');
                 } else {
                     $this->error($Member->getError());
                 }

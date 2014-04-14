@@ -3,7 +3,7 @@ $mainiframe=null;
 var tabwidth=119;
 $loading=null;
 $nav_wraper=$("#nav_wraper");
-$(function () {
+;$(function () {
 	$mainiframe=$("#mainiframe");
 	$content=$("#content");
 	$loading=$("#loading");

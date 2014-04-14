@@ -8,77 +8,134 @@
 // 处理所有的ajax数据
 // 基于jQuery.Form组件完成
 // #ft_ajaxoutmsg显示服务器返回的内容；
+// ft_ajaxButton为需要自动绑定提交的button的属性；
 
-$(function(){
-   var options = {
-      target: '#ft_ajaxoutmsg',          //把服务器返回的内容放入id为output的元素中    
-      beforeSubmit: showRequest,  //提交前的回调函数
-      success: showResponse,      //提交后的回调函数
-      //url: url,                 //默认是form的action， 如果申明，则会覆盖
-      //type: type,               //默认是form的method（get or post），如果申明，则会覆盖
-      //dataType: null,           //html(默认), xml, script, json...接受服务端返回的类型
-      //clearForm: true,          //成功提交后，清除所有表单元素的值
-      //resetForm: true,          //成功提交后，重置所有表单元素的值
-      timeout: 3000               //限制请求的时间，当请求大于3秒后，跳出请求
-   }
+;$(function(){
 
-   $("#myForm").ajaxForm(options);
+    //全局ajax处理
+    $.ajaxSetup({
+        complete: function (jqXHR) {
+            //登录失效处理
+            if (jqXHR.responseText.state === 'logout') {
+                location.href = GV.URL.LOGIN;
+            }
+        },
+        data: {
+            __hash__: GV.TOKEN
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            //请求失败处理
+            alert(errorThrown ? errorThrown : '操作失败');
+        }
+    })
 
-   $("#myForm2").submit(funtion(){
-      $(this).ajaxSubmit(options);
-      return false;   //阻止表单默认提交
-   });
+    if (/msie/.test(navigator.userAgent.toLowerCase())) {
+        //ie 都不缓存
+        $.ajaxSetup({
+            cache: false
+        });
+    }
+    //所有的ajax form提交,由于大多业务逻辑都是一样的，故统一处理
+    var ajaxForm_list = $('form.J_ajaxForm');
+    if (ajaxForm_list.length) {
+      // Wind.use('ajaxForm', 'artDialog', function () {
+        if (/msie/.test(navigator.userAgent.toLowerCase())) {
+            //ie8及以下，表单中只有一个可见的input:text时，会整个页面会跳转提交
+            ajaxForm_list.on('submit', function (e) {
+                //表单中只有一个可见的input:text时，enter提交无效
+                e.preventDefault();
+            });
+        }
+
+        $('button.J_ajax_submit_btn').on('click', function (e) {
+
+            var btn = $(this);
+            var form = btn.parents('form.J_ajaxForm');
+
+            //批量操作 判断选项
+            if (btn.data('subcheck')) {
+                btn.parent().find('span').remove();
+                if (form.find('input.J_check:checked').length) {
+                    var msg = btn.data('msg');
+                    if (msg) {
+                        art.dialog({
+                            id: 'warning',
+                            icon: 'warning',
+                            content: btn.data('msg'),
+                            cancelVal: '关闭',
+                            cancel: function () {
+                                //btn.data('subcheck', false);
+                                //btn.click();
+                            },
+                            ok: function () {
+                               btn.data('subcheck', false);
+                               btn.click();
+                            }
+                        });
+                    } else {
+                        btn.data('subcheck', false);
+                        btn.click();
+                    }
+
+                } else {
+                    $('<span class="tips_error">请至少选择一项</span>').appendTo(btn.parent()).fadeIn('fast');
+                }
+                return false;
+            };
+
+            //ie处理placeholder提交问题
+            if (/msie/.test(navigator.userAgent.toLowerCase())) {
+                form.find('[placeholder]').each(function () {
+                    var input = $(this);
+                    if (input.val() == input.attr('placeholder')) {
+                        input.val('');
+                    }
+                });
+            };
+
+            form.ajaxSubmit({
+                url: btn.data('action') ? btn.data('action') : form.attr('action'), //按钮上是否自定义提交地址(多按钮情况)
+                dataType: 'json',
+                beforeSubmit: function (arr, $form, options) {
+                    var text = btn.text();
+
+                    //按钮文案、状态修改
+                    btn.text(text + '中...').prop('disabled', true).addClass('disabled');
+                },
+                success: function (data, statusText, xhr, $form) {
+                    var text = btn.text();
+
+                    //按钮文案、状态修改
+                    btn.removeClass('disabled').text(text.replace('中...', '')).parent().find('span').remove();
+                    if (data.state === 'success') {
+                        $('<span class="tips_success">' + data.info + '</span>').appendTo(btn.parent()).fadeIn('slow').delay(1000).fadeOut(function () {
+                            if (data.referer) {
+                                //返回带跳转地址
+                                if(window.parent.art){
+                                    //iframe弹出页
+                                    window.parent.location.href = data.referer;
+                                }else{
+                                    window.location.href = data.referer;
+                                }
+                            } else {
+                                if(window.parent.art){
+                                    reloadPage(window.parent);
+                                }else{
+                                    //刷新当前页
+                                    reloadPage(window);
+                                }
+                            }
+                        });
+                    } else if (data.state === 'fail') {
+                        $('<span class="tips_error">' + data.info + '</span>').appendTo(btn.parent()).fadeIn('fast');
+                        btn.removeProp('disabled').removeClass('disabled');
+                    }
+                }
+            });
+
+            e.preventDefault();
+        // });
+      })
+    }
 
 });
-
-
-function showRequest(formData, jqForm, options){
-   //formData: 数组对象，提交表单时，Form插件会以Ajax方式自动提交这些数据，格式如：[{name:user,value:val },{name:pwd,value:pwd}]
-   //jqForm:   jQuery对象，封装了表单的元素   
-   //options:  options对象
-   var queryString = $.param(formData);   //name=1&address=2
-   var formElement = jqForm[0];              //将jqForm转换为DOM对象
-   var address = formElement.address.value;  //访问jqForm的DOM元素
-   return true;  //只要不返回false，表单都会提交,在这里可以对表单元素进行验证
-};
-
-function showResponse(responseText, statusText){
-   //dataType=xml
-   var name = $('name', responseXML).text();
-   var address = $('address', responseXML).text();
-   $("#xmlout").html(name + "  " + address);
-   //dataType=json
-   $("#jsonout").html(data.name + "  " + data.address);
-};
-
-
-
-beforeSubmit: validate
-function validate(formData, jqForm, options) { //在这里对表单进行验证，如果不符合规则，将返回false来阻止表单提交，直到符合规则为止
-   //方式一：利用formData参数
-   for (var i=0; i < formData.length; i++) {
-       if (!formData[i].value) {
-            alert('用户名,地址和自我介绍都不能为空!');
-            return false;
-        }
-    } 
-
-   //方式二：利用jqForm对象
-   var form = jqForm[0]; //把表单转化为dom对象
-      if (!form.name.value || !form.address.value) {
-            alert('用户名和地址不能为空，自我介绍可以为空！');
-            return false;
-      }
-
-  &nbsp;//方式三：利用fieldValue()方法，fieldValue 是表单插件的一个方法，它能找出表单中的元素的值，返回一个集合。
-   var usernameValue = $('input[name=name]').fieldValue();
-   var addressValue = $('input[name=address]').fieldValue();
-   if (!usernameValue[0] || !addressValue[0]) {
-      alert('用户名和地址不能为空，自我介绍可以为空！');
-      return false;
-   }
-
-    var queryString = $.param(formData); //组装数据
-    //alert(queryString); //类似 ： name=1&add=2  
-    return true;
-}

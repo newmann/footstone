@@ -103,5 +103,6 @@ return array(
     'TMPL_ACTION_ERROR'     =>  'Public/error', // 默认错误跳转对应的模板文件
     'TMPL_ACTION_SUCCESS'   =>  'Public/success', // 默认成功跳转对应的模板文件
     'TMPL_EXCEPTION_FILE'   =>  'Public/exception',// 异常页面的模板文件
-
+    
+    'FOOTSTONE_VERSION' => '1.0.0.0',//FOOTSTONE版本号定义
 );
