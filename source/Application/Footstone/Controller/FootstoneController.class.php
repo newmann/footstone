@@ -60,6 +60,8 @@ class FootstoneController extends Controller {
         //     }
         // }
         $menuArray = D('Menu')->AllMenu();
+        
+        trace($menuArray,'menuArray','user');
 
         $this->assign('AllMenu', $this->MenuItemstr($menuArray));
     }
@@ -69,6 +71,7 @@ class FootstoneController extends Controller {
         foreach ($menuArray as $key => $menu) {
             $strMenu .= "<li>";
             if(is_null($menu['items'])){
+
                 $strMenu .= "<a href=\"javascript:openapp('" . $menu['url'] ."','" .$menu['id'] 
                     . "','" . $menu['title'] ."');\"> "
                     ."<i class=\"fa fa-desktop\"></i>"
@@ -81,7 +84,6 @@ class FootstoneController extends Controller {
                     ."<b class=\"arrow fa fa-angle-down\"></b> "
                     ."</a> "
                     ."<ul  class=\"submenu\">";
-                $strMenu .= "<ul  class=\"submenu\">" ;   
                 $result = $this->MenuItemstr($menu['items']);
                 $strMenu .= $result;
                 $strMenu .= "</ul> ";

@@ -83,11 +83,12 @@ class MenuModel extends Model {
      */
     public function SubMenu($parentid){
         $result = $this->NextLevelMenu($parentid);
-        // if (count($result)<>0) {
-        //     foreach ($result as $key => $value) {
-        //         $value['items'] = $this->SubMenu($value['id']);
-        //     }
-        // }
+
+        if (count($result)<>0) {
+            foreach ($result as $key => $value) {
+                $result[$key]['items'] = $this->SubMenu($value['id']);
+            }
+        }
         return $result;
     }
 
@@ -118,44 +119,6 @@ class MenuModel extends Model {
 
 
 
-    //取得树形结构的菜单
-    public function get_tree($myid, $parent = "", $Level = 1) {
-        $data = $this->admin_menu($myid);
-        $Level++;
-        if (is_array($data)) {
-            foreach ($data as $a) {
-                $id = $a['id'];
-                $name = ucwords($a['app']);
-                $model = ucwords($a['model']);
-                $action = $a['action'];
-                //附带参数
-              $fu = "";
-                if ($a['data']) {
-                    $fu = "?" . $a['data'];
-                }
-                $array = array(
-                    "icon" => $a['icon'],
-                    "id" => $id . $name,
-                    "name" => $a['name'],
-                    "parent" => $parent,
-                    "url" => U("{$name}/{$model}/{$action}{$fu}", array("menuid" => $id)),
-                ); 
-                
-                
-                
-                $ret[$id . $name] = $array;
-                $child = $this->get_tree($a['id'], $id, $Level);
-                //由于后台管理界面只支持三层，超出的不层级的不显示
-                if ($child && $Level <= 3) {
-                    $ret[$id . $name]['items'] = $child;
-                }
-               
-            }
-            return $ret;
-        }
-       
-        return false;
-    }
 
     /**
      * 更新缓存

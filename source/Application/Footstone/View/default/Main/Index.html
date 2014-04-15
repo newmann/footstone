@@ -1,4 +1,5 @@
 <include file="Public/header"/>
+
 </head>
 
 <body>
@@ -27,7 +28,7 @@
     </ul>
   </div>
 </div>
-<script src="__JS__/common.js{$js_debug}"></script> 
+
 <script>
 //获取官方通知
 $.getJSON("http://www.thinkcmf.com/service/sms_jsonp.php?callback=?",function(data){
@@ -47,5 +48,5 @@ $.getJSON("http://www.thinkcmf.com/service/sms_jsonp.php?callback=?",function(da
 	
 });
 </script>
-</body>
-</html>
+
+<include file="Public/footer"/>
