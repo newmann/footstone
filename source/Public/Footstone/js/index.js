@@ -1,8 +1,20 @@
+// +----------------------------------------------------------------------
+// | Footstoen [ WE CAN DO MORE ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2013 http://  All rights reserved.
+// +----------------------------------------------------------------------
+// | Author: Newmannhu <Newmannhu@qq.com> <http://>
+// +----------------------------------------------------------------------
+// 整个框架的基础 
+// 通过iframe的方式来管理多页面
+// 
+
 $task_content_inner = null;
 $mainiframe=null;
 var tabwidth=119;
 $loading=null;
 $nav_wraper=$("#nav_wraper");
+
 ;$(function () {
 	$mainiframe=$("#mainiframe");
 	$content=$("#content");
@@ -190,7 +202,7 @@ function openapp(url, appid, appname, selectObj) {
     	var $iframe=$("#appiframe-"+appid);
     	var src=$iframe.get(0).contentWindow.location.href;
     	src=src.substr(src.indexOf("://")+3);
-    	if(src!=GV.HOST+url){
+    	if(src!=GV.ft_HOST+url){
     		$loading.show();
     		$iframe.attr("src",url);
     		$appiframe.load(function(){

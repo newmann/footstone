@@ -59,42 +59,37 @@ class FootstoneController extends Controller {
         //         $this->error('未授权访问!');
         //     }
         // }
-        $menuArray = D('Menu')->AllMenu();
-        
-        trace($menuArray,'menuArray','user');
-
-        $this->assign('AllMenu', $this->MenuItemstr($menuArray));
     }
 
-    public function MenuItemStr($menuArray){
-        $strMenu='';
-        foreach ($menuArray as $key => $menu) {
-            $strMenu .= "<li>";
-            if(is_null($menu['items'])){
+    // public function MenuItemStr($menuArray){
+    //     $strMenu='';
+    //     foreach ($menuArray as $key => $menu) {
+    //         $strMenu .= "<li>";
+    //         if(is_null($menu['items'])){
 
-                $strMenu .= "<a href=\"javascript:openapp('" . $menu['url'] ."','" .$menu['id'] 
-                    . "','" . $menu['title'] ."');\"> "
-                    ."<i class=\"fa fa-desktop\"></i>"
-                    ."<span class=\"menu-text\">" . $menu['title'] . "</span>"
-                    ."</a>";
-            } else{
-                $strMenu .="<a href=\"#\" class=\"dropdown-toggle\">" 
-                    ."<i class=\"fa fa-desktop\"></i>" 
-                    ."<span class=\"menu-text\"> " . $menu['title'] ."</span>"
-                    ."<b class=\"arrow fa fa-angle-down\"></b> "
-                    ."</a> "
-                    ."<ul  class=\"submenu\">";
-                $result = $this->MenuItemstr($menu['items']);
-                $strMenu .= $result;
-                $strMenu .= "</ul> ";
-            }
-            $strMenu .= "</li>";
-        }
+    //             $strMenu .= "<a href=\"javascript:openapp('" . $menu['url'] ."','" .$menu['id'] 
+    //                 . "','" . $menu['title'] ."');\"> "
+    //                 ."<i class=\"fa fa-desktop\"></i>"
+    //                 ."<span class=\"menu-text\">" . $menu['title'] . "</span>"
+    //                 ."</a>";
+    //         } else{
+    //             $strMenu .="<a href=\"#\" class=\"dropdown-toggle\">" 
+    //                 ."<i class=\"fa fa-desktop\"></i>" 
+    //                 ."<span class=\"menu-text\"> " . $menu['title'] ."</span>"
+    //                 ."<b class=\"arrow fa fa-angle-down\"></b> "
+    //                 ."</a> "
+    //                 ."<ul  class=\"submenu\">";
+    //             $result = $this->MenuItemstr($menu['items']);
+    //             $strMenu .= $result;
+    //             $strMenu .= "</ul> ";
+    //         }
+    //         $strMenu .= "</li>";
+    //     }
 
-        trace($strMenu,'菜单数组','user');
-        return $strMenu;
+    //     trace($strMenu,'菜单数组','user');
+    //     return $strMenu;
 
-    }
+    // }
 
 
     /**
