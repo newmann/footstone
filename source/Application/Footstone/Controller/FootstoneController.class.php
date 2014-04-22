@@ -8,41 +8,43 @@
 // +----------------------------------------------------------------------
 namespace Footstone\Controller;
 use Think\Controller;
-use Admin\Model\AuthRuleModel;
-use Admin\Model\AuthGroupModel;
+
 
 /**
  * Footstone公共Action
  * @author Newmannhu <Newmannhu@qq.com>
  */
 class FootstoneController extends Controller {
-
+	protected $ft_User  =   array();//当前用户的信息；
     /**
      * 后台控制器初始化
      */
     protected function _initialize(){
         // 获取当前用户ID
-        define('UID',is_login());
+    	$this->ft_User = footstone_is_login();
+        define('UID',$this->ft_User['fid']);
         if( !UID ){// 还没登录 跳转到登录页面
             // $this->redirect('Public/login');
             $this->error('还没有登陆系统！');
         }
-        /* 读取数据库中的配置 */
-        $config =   S('DB_CONFIG_DATA');
-        if(!$config){
-            $config =   api('Config/lists');
-            S('DB_CONFIG_DATA',$config);
-        }
-        C($config); //添加配置
+
+        // /* 读取数据库中的配置 */
+        // $config =   S('DB_CONFIG_DATA');
+        // if(!$config){
+        //     $config =   api('Config/lists');
+        //     S('DB_CONFIG_DATA',$config);
+        // }
+        // C($config); //添加配置
 
         // 是否是超级管理员
-        define('IS_ROOT',   is_administrator());
+        define('IS_ROOT',   footstone_is_administrator());
         if(!IS_ROOT && C('ADMIN_ALLOW_IP')){
             // 检查IP地址访问
             if(!in_array(get_client_ip(),explode(',',C('ADMIN_ALLOW_IP')))){
                 $this->error('403:禁止访问');
             }
         }
+        
         // 检测访问权限
         // $access =   $this->accessControl();
         // if ( $access === false ) {
@@ -61,35 +63,6 @@ class FootstoneController extends Controller {
         // }
     }
 
-    // public function MenuItemStr($menuArray){
-    //     $strMenu='';
-    //     foreach ($menuArray as $key => $menu) {
-    //         $strMenu .= "<li>";
-    //         if(is_null($menu['items'])){
-
-    //             $strMenu .= "<a href=\"javascript:openapp('" . $menu['url'] ."','" .$menu['id'] 
-    //                 . "','" . $menu['title'] ."');\"> "
-    //                 ."<i class=\"fa fa-desktop\"></i>"
-    //                 ."<span class=\"menu-text\">" . $menu['title'] . "</span>"
-    //                 ."</a>";
-    //         } else{
-    //             $strMenu .="<a href=\"#\" class=\"dropdown-toggle\">" 
-    //                 ."<i class=\"fa fa-desktop\"></i>" 
-    //                 ."<span class=\"menu-text\"> " . $menu['title'] ."</span>"
-    //                 ."<b class=\"arrow fa fa-angle-down\"></b> "
-    //                 ."</a> "
-    //                 ."<ul  class=\"submenu\">";
-    //             $result = $this->MenuItemstr($menu['items']);
-    //             $strMenu .= $result;
-    //             $strMenu .= "</ul> ";
-    //         }
-    //         $strMenu .= "</li>";
-    //     }
-
-    //     trace($strMenu,'菜单数组','user');
-    //     return $strMenu;
-
-    // }
 
 
     /**
@@ -138,12 +111,12 @@ class FootstoneController extends Controller {
      *   返回 **false**, 不允许任何人访问(超管除外)
      *   返回 **true**, 允许任何管理员访问,无需执行节点权限检测
      *   返回 **null**, 需要继续执行节点权限检测决定是否允许访问
-     * @author 朱亚杰  <xcoolcc@gmail.com>
+     * @author Newmannhu
      */
     final protected function accessControl(){
-        // if(IS_ROOT){
-        //     return true;//管理员允许访问任何页面
-        // }
+        if(IS_ROOT){
+            return true;//管理员允许访问任何页面
+        }
         $allow = C('ALLOW_VISIT');
         $deny  = C('DENY_VISIT');
         $check = strtolower(CONTROLLER_NAME.'/'.ACTION_NAME);

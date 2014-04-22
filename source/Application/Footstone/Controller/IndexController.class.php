@@ -1,6 +1,6 @@
 <?php
 // +----------------------------------------------------------------------
-// | Footstoen [ WE CAN DO MORE ]
+// | Footstone [ WE CAN DO MORE ]
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013 http://  All rights reserved.
 // +----------------------------------------------------------------------
@@ -27,10 +27,10 @@ class IndexController extends FootstoneController {
         //$this->assign("SUBMENU_CONFIG", json_encode(D("Menu")->menu_json()));
     	$AllMenu = D("Menu")->AllMenu();
     	
-
+		trace($AllMenu,'IndexController-Allmenu','user');
 		$this->assign("SUBMENU_CONFIG", json_encode($AllMenu)); 
-
-
+//     	$this->assign("SUBMENU_CONFIG", $AllMenu);
+		$this->assign('CURRENT_USER',$this->ft_User);
        	$this->display();
         
     }

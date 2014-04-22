@@ -12,10 +12,35 @@
  * 所有除开系统级别的前台配置
  */
 return array(
+    /* 数据库配置 */
+    'DB_TYPE'   => 'mysqli', // 数据库类型
+    'DB_HOST'   => '127.0.0.1', // 服务器地址
+    'DB_NAME'   => 'footstone', // 数据库名
+    'DB_USER'   => 'root', // 用户名
+    'DB_PWD'    => '',  // 密码
+    'DB_PORT'   => '3306', // 端口
+    'DB_PREFIX' => 'first_', // 数据库表前缀
+
     /* 数据缓存设置 */
-    'DATA_CACHE_PREFIX'    => 'onethink_', // 缓存前缀
+    'DATA_CACHE_PREFIX'    => 'first_', // 缓存前缀
     'DATA_CACHE_TYPE'      => 'File', // 数据缓存类型
 
+    /* SESSION 和 COOKIE 配置 */
+	/* Cookie设置 */
+	'COOKIE_EXPIRE'         =>  0,    // Cookie有效期
+	'COOKIE_DOMAIN'         =>  'footstone_first',      // Cookie有效域名
+	'COOKIE_PATH'           =>  '/',     // Cookie路径
+	'COOKIE_PREFIX'  => 'footstone_first_', // Cookie前缀 避免冲突
+/* SESSION设置 */
+	'SESSION_AUTO_START'    =>  true,    // 是否自动开启Session
+	'SESSION_OPTIONS'       =>  array(), // session 配置数组 支持type name id path expire domain 等参数
+	'SESSION_TYPE'          =>  'db', // session hander类型 默认无需设置 除非扩展了session hander驱动
+	'SESSION_PREFIX' => 'footstone_first_', //session前缀
+    'VAR_SESSION_ID' => 'session_id',   //修复uploadify插件无法传递session_id的bug
+    'SESSION_TABLE' => 'first_session',
+    'FOOT_SESSION_USER_AUTH' => 'user_auth',
+    'FOOT_SESSION_USER_AUTH_SIGN'=> 'user_auth_sign',
+ 
     /* 文件上传相关配置 */
     'DOWNLOAD_UPLOAD' => array(
         'mimes'    => '', //允许上传的文件MiMe类型
@@ -94,10 +119,7 @@ return array(
     ),
     
 
-    /* SESSION 和 COOKIE 配置 */
-    'SESSION_PREFIX' => 'onethink_admin', //session前缀
-    'COOKIE_PREFIX'  => 'onethink_admin_', // Cookie前缀 避免冲突
-    'VAR_SESSION_ID' => 'session_id',	//修复uploadify插件无法传递session_id的bug
+
 
     /* 后台错误页面模板 */
     'TMPL_ACTION_ERROR'     =>  'Public/error', // 默认错误跳转对应的模板文件
@@ -105,4 +127,7 @@ return array(
     'TMPL_EXCEPTION_FILE'   =>  'Public/exception',// 异常页面的模板文件
     
     'FOOTSTONE_VERSION' => '1.0.0.0',//FOOTSTONE版本号定义
+    'FOOTSTONE_AUTH_KEY' => '8U<m,^gxMCIOb~o;@{T!Qe"6-+RiYu*K}w/f(FWk',//加密字符串，用户口令加密
+    'FOOTSTONE_ADMINISTRATOR' => 1,//系统超级管理员
+    'FOOTSTONE_ADMINISTRATOR_ALIVE' =>true, //系统超级管理是否可用
 );

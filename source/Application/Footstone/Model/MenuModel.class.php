@@ -1,6 +1,6 @@
 <?php
 // +----------------------------------------------------------------------
-// | Footstoen [ WE CAN DO MORE ]
+// | Footstone [ WE CAN DO MORE ]
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013 http://  All rights reserved.
 // +----------------------------------------------------------------------
@@ -17,6 +17,7 @@ class MenuModel extends Model {
     //自动验证
     protected $_validate = array(
         array('url','require','url必须填写'), //默认情况下用正则进行验证
+        
     );
 
     //自动完成
@@ -33,28 +34,14 @@ class MenuModel extends Model {
     public function admin_menu($parentid, $with_self = false) {
         //父节点ID
         $parentid = (int) $parentid;
-        $result = $this->where(array('pid' => $parentid, 'hide' => 0))->order(array("sort" => "ASC"))->select();
+        $result = $this->where(array('fpid' => $parentid, 'fstatus' => 1))->order(array("fsort" => "ASC"))->select();
         if ($with_self) {
-            $result2[] = $this->where(array('id' => $parentid))->find();
+            $result2[] = $this->where(array('fid' => $parentid))->find();
             $result = array_merge($result2, $result);
         }
         return $array;
     }
 
-    /** 菜单数组定义
-     array(
-                "id" => "",
-                "title" => "changyong",
-                "pid" => "常用",
-                "sort" => "",
-                "url" => "",
-                "tip" => "",
-                "group" => "",
-                "itmes" => $items(子菜单)
-        );
-        整个菜单树是由数组嵌套而成，一级菜单+二级菜单+3级菜单
-        菜单已经按sort方式排好序；
-    */
 
 
     /**
@@ -66,10 +53,10 @@ class MenuModel extends Model {
     public function NextLevelMenu($parentid, $with_self = false) {
         //父节点ID
         $parentid = (int) $parentid;
-        $result = $this->where(array('pid' => $parentid, 'hide' => 0))->order(array("sort" => "ASC"))->select();
+        $result = $this->where(array('fpid' => $parentid, 'fstatus' => 1))->order(array("fsort" => "ASC"))->select();
         
         if ($with_self) {
-            $result2[0] = $this->where(array('id' => $parentid))->find();
+            $result2[0] = $this->where(array('fid' => $parentid))->find();
             $result = array_merge($result2, $result);
         }
 
@@ -86,7 +73,7 @@ class MenuModel extends Model {
 
         if (count($result)<>0) {
             foreach ($result as $key => $value) {
-                $result[$key]['items'] = $this->SubMenu($value['id']);
+                $result[$key]['items'] = $this->SubMenu($value['fid']);
             }
         }
         return $result;
@@ -147,7 +134,7 @@ class MenuModel extends Model {
     //删除操作时删除缓存
     public function _after_delete($data, $options) {
         parent::_after_delete($data, $options);
-        $this->_before_write($data);
+        F("Menu", NULL);
     }
     
 
