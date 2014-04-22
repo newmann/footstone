@@ -11,7 +11,7 @@
 <meta name="description" content="This is page-header (.page-header &gt; h1)">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="__CSS__/reset.css" rel="stylesheet">
+<link rel="stylesheet" href="__CSS__/reset.css">
 <link href="__STATIC__/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 <link href="__STATIC__/bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
 <link rel="stylesheet" href="__CSS__/font-awesome.min.css">
@@ -20,16 +20,16 @@
 <![endif]-->
 
 <link rel="stylesheet" href="__CSS__/prettify.css">
-<link rel="stylesheet" href="__CSS__/css">
+<!-- <link rel="stylesheet" href="__CSS__/css"> -->
 <link rel="stylesheet" href="__CSS__/ace.min.css">
-
+<!--[if lte IE 8]>
+		  <link rel="stylesheet" href="__CSS__/ace-ie.min.css?{$js_debug}" />
+<![endif]-->
 
 <link rel="stylesheet" href="__CSS__/ace-responsive.min.css">
 <link rel="stylesheet" href="__CSS__/ace-skins.min.css">
 
-<!--[if lte IE 8]>
-		  <link rel="stylesheet" href="__CSS__/ace-ie.min.css?{$js_debug}" />
-		<![endif]-->
+
 <link rel="stylesheet" href="__CSS__/style_new.css">
 <link rel="stylesheet" href="__CSS__/theme_blue.css">
 <link rel="stylesheet" href="__CSS__/hack.css">
@@ -50,15 +50,26 @@ var GV = {
 <php>foreach($submenus as $menu){ </php>
 					<li>
 						<php>if(empty($menu->items)){</php>
+<<<<<<< HEAD
 							<php>$urlpath=U($menu->furl)</php>
 							<a href="javascript:openapp('{$urlpath}','{$menu:fid}','{$menu:ftitle}');">
 								<i class="fa fa-desktop"></i>
 								<span class="menu-text">{$menu:ftitle}</span>
+=======
+							<php>$urlpath = U($menu->url)</php>
+							<a href="javascript:openapp('{$urlpath}','{$menu:id}','{$menu:title}');">
+								<i class="fa fa-desktop"></i>
+								<span class="menu-text">{$menu:title}</span>
+>>>>>>> 57cdec3332dc68f796ed1db9628f590cffdda939
 							</a>
 						<php>}else{</php>
 							<a href="#" class="dropdown-toggle">
 								<i class="fa fa-desktop"></i>
+<<<<<<< HEAD
 								<span class="menu-text">{$menu:ftitle}</span>
+=======
+								<span class="menu-text">{$menu:title}</span>
+>>>>>>> 57cdec3332dc68f796ed1db9628f590cffdda939
 								<b class="arrow fa fa-angle-down"></b>
 							</a>
 							<ul  class="submenu">
@@ -74,8 +85,13 @@ var GV = {
 <php>foreach($submenus as $menu){</php>
 					<li>
 						<php>if(empty($menu->items)){</php>
+<<<<<<< HEAD
 								<php>$urlpath=U($menu->furl)</php>
 								<a href="javascript:openapp('{$urlpath}','{$menu:fid}','{$menu:ftitle}');">
+=======
+							<php>$urlpath = U($menu->url)</php>
+							<a href="javascript:openapp('{$urlpath}','{$menu:id}','{$menu:title}');">
+>>>>>>> 57cdec3332dc68f796ed1db9628f590cffdda939
 								<i class="fa fa-angle-double-right"></i>
 								<span class="menu-text">{$menu:ftitle}</span>
 							</a>
@@ -98,8 +114,13 @@ var GV = {
 <php>function getsubmenu2($submenus){</php>
 <php>foreach($submenus as $menu){</php>
 					<li>
+<<<<<<< HEAD
 							<php>$urlpath=U($menu->furl)</php>
 							<a href="javascript:openapp('{$urlpath}','{$menu:fid}','{$menu:ftitle}');">
+=======
+						<php>$urlpath = U($menu->url)</php>
+						<a href="javascript:openapp('{$urlpath}','{$menu:id}','{$menu:title}');">
+>>>>>>> 57cdec3332dc68f796ed1db9628f590cffdda939
 								<i class="fa fa-leaf"></i>
 								<span class="menu-text">{$menu:ftitle}</span>
 							</a>
