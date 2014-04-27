@@ -12,73 +12,35 @@ namespace Footstone\Controller;
 
 
 class UserController extends FootstoneController{
-    /**
-     * 构造方法，实例化操作模型
-     */
-    protected function _init(){
-        $this->model = new UserModel();
-    }
 
     /**
      * 注册一个新用户
-     * @param  string $username 用户名
-     * @param  string $password 用户密码
-     * @param  string $email    用户邮箱
-     * @param  string $mobile   用户手机号码
-     * @return integer          注册成功-用户信息，注册失败-错误编号
+     * @param  string $fusername 用户名
+     * @param  string $fpassword 用户密码
+     * @param  string $femail    用户邮箱
+     * @param  string $fmobile   用户手机号码
+     * @param  string $fremark   备注说明
+     * @return 
      */
-    public function add($usercode, $username, $password, $email, $mobile = ''){
-        return $this->model->register($usercode,$username, $password, $email, $mobile);
-    }
-
-    /**
-     * 用户登录认证
-     * @param  string  $username 用户名
-     * @param  string  $password 用户密码
-     * @param  integer $type     用户名类型 （1-用户名，2-邮箱，3-手机，4-UID）
-     * @return integer           登录成功-用户ID，登录失败-错误编号
-     */
-    public function login($username, $password, $type = 1){
-    	$map = array();
-		switch ($type) {
-			case 1:
-				$map['fcode'] = $fcode;
-				break;
-			case 2:
-				$map['femail'] = $fcode;
-				break;
-			case 3:
-				$map['fmobile'] = $fcode;
-				break;
-			case 4:
-				$map['fid'] = $fcode;
-				break;
-			default:
-				return 0; //参数错误
-		}
-
-		/* 获取用户数据 */
-		$user = $this->model->where($map)->find();
-		if(is_array($user) && $user['fstatus']){
-			/* 验证用户密码 ,在初始化的时候不需要验证管理员口令，*/
-			if (((FOOTSTONE_ADMINISTRATOR_ALIVE) && ($user['fid'] ===1)) ||
-				(footstone_md5($fpassword, FOOTSTONE_AUTH_KEY) === $user['fpassword'])){
-				
-				$this->model->updateLogin($user['fid']); //更新用户登录信息
-				//记录行为
-				action_log('user_login', 'member', $uid, $uid);
-				/* 记录session */
-				$this->saveloginsession($user);
-				
-				return $user['fid']; //登录成功，返回用户ID
-			} else {
-				return -2; //密码错误
-			}
-		} else {
-			return -1; //用户不存在或被禁用
-		}
+    public function add($fusercode='', $fusername='', $fpassword='',$frepassword='', $femail='', $fmobile = '',$fremark = ''){
+        if(IS_POST){
+        	/* 检测密码 */
+        	if($fpassword != $frepassword){
+        		$this->error('密码和重复密码不一致！');
+        	}
+        
+        	$uid =   D('User')->register($fusercode,$fusername, $fpassword, $femail, $mobile,$fremark);
+        	if(0 < $uid){ //注册成功
+        		$this->success('用户添加成功！');
+        	} else { //注册失败，显示错误信息
+        		$this->error($this->showRegError($uid));
+        	}
+        } else {
+        	$this->display();
+        }        
         
     }
+
 
     /**
      * 获取用户信息

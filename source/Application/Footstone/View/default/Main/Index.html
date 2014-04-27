@@ -27,25 +27,28 @@
     </ul>
   </div>
 </div>
-
+<script src="__STATIC__/jquery-1.10.2.min.js"></script>
+<script src="__STATIC__/bootstrap3.0.3/js/bootstrap.min.js"></script>
 <script>
 //获取官方通知
-$.getJSON("http://www.thinkcmf.com/service/sms_jsonp.php?callback=?",function(data){
-	var tpl='<li><em class="title"></em><span class="content"></span></li>';
-	var $thinkcmf_notices=$("#thinkcmf_notices");
-	$thinkcmf_notices.empty();
-	if(data.length>0){
-		$.each(data,function(i,n){
-			var $tpl=$(tpl);
-			$(".title",$tpl).html(n.title);
-			$(".content",$tpl).html(n.content);
-			$thinkcmf_notices.append($tpl);
-		});
-	}else{
-		$thinkcmf_notices.append("<li>^_^,没有通知~~</li>");
-	}
-	
-});
+$(function(){
+	$.getJSON("http://www.thinkcmf.com/service/sms_jsonp.php?callback=?",function(data){
+		var tpl='<li><em class="title"></em><span class="content"></span></li>';
+		var $thinkcmf_notices=$("#thinkcmf_notices");
+		$thinkcmf_notices.empty();
+		if(data.length>0){
+			$.each(data,function(i,n){
+				var $tpl=$(tpl);
+				$(".title",$tpl).html(n.title);
+				$(".content",$tpl).html(n.content);
+				$thinkcmf_notices.append($tpl);
+			});
+		}else{
+			$thinkcmf_notices.append("<li>^_^,没有通知~~</li>");
+		}
+		
+	});
+})
 </script>
-
-<include file="Public/footer"/>
+</body>
+</html>
